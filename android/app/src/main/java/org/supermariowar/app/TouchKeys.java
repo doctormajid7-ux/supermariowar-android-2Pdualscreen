@@ -32,11 +32,6 @@ final class TouchKeys {
     void beginBatch() { batching = true; }
     void endBatch() { batching = false; update(); }
 
-    /** Reassert held physical keys after native input state was reset. */
-    void resendHeld() {
-        for (int key : held) sink.keyChanged(key, true);
-    }
-
     private void update() {
         if (batching) return;
         Set<Integer> next = new TreeSet<>(owners.values());

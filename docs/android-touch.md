@@ -144,13 +144,3 @@ Les requêtes JNI indiquant l’état menu/partie ne sont plus exécutées penda
 `MotionEvent` ni pendant chaque dessin. Elles sont lues périodiquement par l’activité
 et mises en cache ; le chemin tactile ne fait donc plus d’appel natif bloquant lorsqu’un
 joueur maintient ou déplace plusieurs doigts. Le code Java a été recompilé avec succès.
-
-Les touches physiques encore maintenues sont aussi réémises toutes les 100 ms. Cette
-réémission ne crée pas de répétition dans le jeu lorsque `fDown` est intacte, mais
-répare rapidement l’état si le moteur réinitialise ses contrôles pendant une transition
-ou un événement de focus sans que les doigts aient bougé.
-
-Le mode portrait 2P est maintenant conservé pendant une partie. Une valeur native
-transitoirement incomplète ne peut plus déclencher une rotation de l’activité ; cela
-évite la perte de focus Android commune aux deux joueurs. Le retour au mode paysage
-reste possible depuis les menus.
