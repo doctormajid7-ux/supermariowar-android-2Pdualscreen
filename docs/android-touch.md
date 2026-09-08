@@ -137,3 +137,10 @@ Le code n'impose pas de limite à quatre, six ou huit contacts.
 - Lint global reste en échec : 31 erreurs dans SDL et 35 avertissements, comme le
   relevé antérieur. Aucun diagnostic dans les classes tactiles modifiées. Le rapport
   local est `android/app/build/reports/lint-results-debug.html`.
+
+## Correctif de réactivité
+
+Les requêtes JNI indiquant l’état menu/partie ne sont plus exécutées pendant chaque
+`MotionEvent` ni pendant chaque dessin. Elles sont lues périodiquement par l’activité
+et mises en cache ; le chemin tactile ne fait donc plus d’appel natif bloquant lorsqu’un
+joueur maintient ou déplace plusieurs doigts. Le code Java a été recompilé avec succès.

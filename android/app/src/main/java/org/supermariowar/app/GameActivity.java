@@ -17,17 +17,24 @@ public class GameActivity extends SDLActivity {
     private TouchControlsView touchControls;
     private final Handler modeHandler = new Handler(Looper.getMainLooper());
     private boolean portraitMode;
+    // Read on the UI thread at a low rate. TouchEvent handling must never call JNI
+    // for every finger or every movement: on some devices that stalls the input
+    // queue long enough to look like a one-second loss of controls.
+    private volatile boolean gameplay;
+    private volatile boolean dpadUpAllowed = true;
     private final Runnable modePoll = new Runnable() {
         @Override public void run() {
             if (isFinishing() || isDestroyed()) return;
             boolean requested = nativeIsTwoPlayerPortrait();
+            gameplay = nativeIsGameplay();
+            dpadUpAllowed = nativeAllowsDpadUp();
             if (requested != portraitMode) {
                 portraitMode = requested;
                 setRequestedOrientation(requested ? ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                         : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
                 if (touchControls != null) touchControls.setTwoPlayerMode(requested);
             }
-            if (touchControls != null) touchControls.refreshMenuState();
+            if (touchControls != null) touchControls.refreshMenuState(gameplay, dpadUpAllowed);
             modeHandler.postDelayed(this, 250);
         }
     };
@@ -37,11 +44,11 @@ public class GameActivity extends SDLActivity {
     private native boolean nativeAllowsDpadUp();
 
     boolean allowsDpadUp() {
-        return nativeAllowsDpadUp();
+        return dpadUpAllowed;
     }
 
     boolean isGameplay() {
-        return nativeIsGameplay();
+        return gameplay;
     }
 
     @Override protected void onCreate(Bundle state) {

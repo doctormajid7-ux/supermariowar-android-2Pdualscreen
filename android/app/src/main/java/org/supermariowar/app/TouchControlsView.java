@@ -28,6 +28,8 @@ final class TouchControlsView extends View {
     private final TouchRouter router = new TouchRouter(input, input2);
     private TouchLayout layout, layout2;
     private boolean twoPlayerMode;
+    private boolean gameplay;
+    private boolean dpadUpAllowed = true;
 
     private float controlScale() {
         return getHeight() > getWidth() ? 1.25f : 1.0f;
@@ -108,10 +110,11 @@ final class TouchControlsView extends View {
         invalidate();
     }
 
-    void refreshMenuState() {
-        boolean enabled = ((GameActivity) getContext()).allowsDpadUp();
-        if (router.allowsPadUp() != enabled) {
-            router.setAllowPadUp(enabled);
+    void refreshMenuState(boolean isGameplay, boolean allowUp) {
+        gameplay = isGameplay;
+        dpadUpAllowed = allowUp;
+        if (router.allowsPadUp() != allowUp) {
+            router.setAllowPadUp(allowUp);
             invalidate();
         }
     }
@@ -158,7 +161,6 @@ final class TouchControlsView extends View {
 
     @Override public boolean onTouchEvent(MotionEvent event) {
         if (layout == null || !input.isEnabled()) return true;
-        refreshMenuState();
         final int action = event.getActionMasked();
         if (action == MotionEvent.ACTION_CANCEL) {
             releaseAll();
@@ -198,7 +200,6 @@ final class TouchControlsView extends View {
 
     @Override protected void onDraw(Canvas canvas) {
         if (layout == null) return;
-        refreshMenuState();
         TouchLayout l = layout;
         drawControls(canvas, l, input);
         if (layout2 != null) {
