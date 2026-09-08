@@ -8,8 +8,8 @@ android {
         applicationId 'org.supermariowar.app'
         minSdk 23
         targetSdk 35
-        versionCode 7
-        versionName '2.0.0-stage2-responsive'
+        versionCode 9
+        versionName '2.0.0-stage2-orientation-safe'
         ndk { abiFilters 'arm64-v8a' }
     }
     sourceSets.main {

@@ -28,6 +28,10 @@ public class GameActivity extends SDLActivity {
             boolean requested = nativeIsTwoPlayerPortrait();
             gameplay = nativeIsGameplay();
             dpadUpAllowed = nativeAllowsDpadUp();
+            // Never rotate the Activity while a match is running. A transient
+            // native player-state update must not drop window focus for both
+            // touch controllers.
+            if (gameplay && portraitMode && !requested) requested = true;
             if (requested != portraitMode) {
                 portraitMode = requested;
                 setRequestedOrientation(requested ? ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
