@@ -98,10 +98,32 @@ void MI_TeamSelect::Draw()
         rm->menu_plain_field.draw(m_pos.x + 208, m_pos.y + App::screenHeight * 0.47f, {412, 160, 100, 32});
         rm->menu_font_large.drawCentered(App::screenWidth/2, m_pos.y + App::screenHeight * 0.48f, "Continue");
     }
+
+    bool hasBot = false;
+    for (short player = 0; player < 4; player++)
+        hasBot |= game_values.playercontrol[player] == 2;
+    if (hasBot)
+        rm->menu_font_small.drawCentered(App::screenWidth / 2, m_pos.y + App::screenHeight * 0.78f,
+            "Action: randomize bot skins");
 }
 
 MenuCodeEnum MI_TeamSelect::SendInput(CPlayerInput * playerInput)
 {
+    if (playerInput->outputControls[0].menu_random.fPressed) {
+        for (short player = 0; player < 4; player++) {
+            if (game_values.playercontrol[player] == 2) {
+                // Reroll to a concrete, loadable skin so repeated presses are
+                // immediately visible, including after a CPU is marked ready.
+                game_values.randomskin[player] = false;
+                const short previousSkin = game_values.skinids[player];
+                do {
+                    game_values.skinids[player] = RANDOM_INT(skinlist->count());
+                } while ((skinlist->count() > 1 && game_values.skinids[player] == previousSkin) ||
+                         !rm->LoadMenuSkin(player, game_values.skinids[player],
+                                           game_values.colorids[player], false));
+            }
+        }
+    }
     for (short iPlayer = 0; iPlayer < 4; iPlayer++) {
         COutputControl * playerKeys = &game_values.playerInput.outputControls[iPlayer];
 

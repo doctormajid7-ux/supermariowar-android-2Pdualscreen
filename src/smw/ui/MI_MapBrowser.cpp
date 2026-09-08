@@ -6,6 +6,7 @@
 #include "MapList.h"
 #include "path.h"
 #include "ResourceManager.h"
+#include "gfx/ThumbnailCache.h"
 
 extern CGameValues game_values;
 extern CResourceManager* rm;
@@ -259,14 +260,17 @@ void MI_MapBrowser::LoadPage(short page, bool fUseFilters)
 
         std::string sConvertedPath = convertPath(szThumbnail);
 
-        if (!FileExists(sConvertedPath)) {
+        if (auto cached = thumbnail_cache::load(sConvertedPath)) {
+            mapSurfaces[iMap] = gfxSprite(std::move(cached), std::nullopt);
+        } else {
             g_map->loadMap((*itr).second.filename, read_type_preview);
             smallDelay();  //Sleeps to help the music from skipping
-            g_map->saveThumbnail(sConvertedPath, false);
+            mapSurfaces[iMap] = g_map->createThumbnailSurface(false);
+            // Display the generated image even if the cache directory is unwritable.
+            thumbnail_cache::save(mapSurfaces[iMap].getSurface(), sConvertedPath);
             smallDelay();
         }
 
-        mapSurfaces[iMap] = ImageLoader(sConvertedPath.c_str()).withoutColorKey().create();
         mapListNodes[iMap] = &(*itr).second;
         mapNames[iMap] = (*itr).first.c_str();
         mapListItr[iMap] = itr;

@@ -10,7 +10,7 @@ project(smw
 	VERSION 2.0.0
 	DESCRIPTION "A fan-made multiplayer Super Mario Bros. style deathmatch game"
 	HOMEPAGE_URL "https://github.com/mmatyas/supermariowar"
-	LANGUAGES CXX
+	LANGUAGES C CXX
 )
 
 #
@@ -21,6 +21,12 @@ option(USE_PNG_SAVE "Use PNG for screenshots and thumbnails" ON)
 option(NO_NETWORK "Disable all network communication" OFF)
 option(SDL2_FORCE_GLES "(SDL2) Use OpenGL ES rendering if possible" OFF)
 option(BUILD_TESTS "Build the unit tests" ON)
+option(BUILD_EDITORS "Build desktop level and world editors" ON)
+
+if(ANDROID)
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+	add_link_options("-Wl,-z,max-page-size=16384")
+endif()
 
 set(SMW_INSTALL_PORTABLE_DEFAULT OFF)
 if(WIN32)
@@ -198,8 +204,10 @@ include_directories(src/smw)
 add_subdirectory(src/common)
 add_subdirectory(src/common_netplay)
 add_subdirectory(src/smw)
-add_subdirectory(src/leveleditor)
-add_subdirectory(src/worldeditor)
+if(BUILD_EDITORS)
+	add_subdirectory(src/leveleditor)
+	add_subdirectory(src/worldeditor)
+endif()
 
 if(NOT NO_NETWORK)
 	add_subdirectory(src/server)

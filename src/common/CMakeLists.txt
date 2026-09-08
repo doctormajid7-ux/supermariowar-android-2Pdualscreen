@@ -29,6 +29,8 @@ add_library(CommonFiles STATIC
     gfx/gfxSDL.h
     gfx/gfxSprite.cpp
     gfx/gfxSprite.h
+    gfx/ThumbnailCache.cpp
+    gfx/ThumbnailCache.h
     global.cpp
     input.cpp
     input.h

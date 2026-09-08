@@ -89,4 +89,5 @@ class MI_InputControlContainer : public UI_Control
 		MI_InputControlField * miMenuInputControlFields[NUM_KEYS];
 
 		MI_Button * miBackButton;
+		MI_Button * miResetButton;
 };

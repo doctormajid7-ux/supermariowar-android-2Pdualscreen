@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Super Mario War</string>
+    <string name="preparing">Preparing Super Mario War…</string>
+    <string name="android_port_credits">Android port by @doctormajid7-ux\nOriginal game by the Super Mario War contributors</string>
+    <string name="prepare_error">Unable to prepare the game</string>
+    <string name="close">Close</string>
+    <string name="touch_jump">JUMP</string>
+    <string name="touch_action">ACTION</string>
+    <string name="touch_item">ITEM</string>
+    <string name="touch_back">BACK</string>
+    <string name="touch_confirm">OK / PAUSE</string>
+</resources>

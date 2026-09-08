@@ -376,6 +376,12 @@ MI_InputControlContainer::MI_InputControlContainer(gfxSprite * spr_button, short
 
     miBackButton = new MI_Button(&rm->spr_selectfield, 544, 432, "Back", 80, TextAlign::CENTER);
     miBackButton->SetCode(MENU_CODE_BACK_TO_CONTROLS_MENU);
+    miResetButton = new MI_Button(spr_button, x + 16, 432, "Restore defaults", 210, TextAlign::CENTER);
+    miResetButton->SetOnPress([this]() {
+        resetInputConfiguration(iPlayerID);
+        SetPlayer(iPlayerID);
+        game_values.playerInput.ResetKeys();
+    });
 
     mInputMenu = new UI_Menu();
     mInputMenu->SetCancelCode(MENU_CODE_BACK_TO_CONTROLS_MENU);
@@ -400,9 +406,10 @@ MI_InputControlContainer::MI_InputControlContainer(gfxSprite * spr_button, short
     mInputMenu->AddControl(miMenuInputControlFields[4], miMenuInputControlFields[3], miMenuInputControlFields[5], NULL, miBackButton);
     mInputMenu->AddControl(miMenuInputControlFields[5], miMenuInputControlFields[4], miMenuInputControlFields[6], NULL, miBackButton);
     mInputMenu->AddControl(miMenuInputControlFields[6], miMenuInputControlFields[5], miMenuInputControlFields[7], NULL, miBackButton);
-    mInputMenu->AddControl(miMenuInputControlFields[7], miMenuInputControlFields[6], miBackButton, NULL, miBackButton);
+    mInputMenu->AddControl(miMenuInputControlFields[7], miMenuInputControlFields[6], miResetButton, NULL, miBackButton);
 
     mInputMenu->AddControl(miBackButton, miMenuInputControlFields[7], miDeviceSelectField, miDeviceSelectField, NULL);
+    mInputMenu->AddControl(miResetButton, miMenuInputControlFields[7], miBackButton, miDeviceSelectField, miBackButton);
 
     mInputMenu->setInitialFocus(miDeviceSelectField);
 

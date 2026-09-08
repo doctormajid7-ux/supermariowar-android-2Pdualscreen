@@ -82,12 +82,27 @@ MenuCodeEnum MI_PlayerSelect::SendInput(CPlayerInput* playerInput)
             }
         }
 
+        if (playerInput->outputControls[iPlayer].menu_random.fPressed) {
+            int humanPlayers = 0;
+            for (int player = 0; player < 4; player++)
+                humanPlayers += game_values.playercontrol[player] == 1 ? 1 : 0;
+            if (humanPlayers == 2)
+                game_values.localTwoPlayerPortrait = !game_values.localTwoPlayerPortrait;
+        }
+
         if (playerInput->outputControls[iPlayer].menu_select.fPressed || playerInput->outputControls[iPlayer].menu_cancel.fPressed) {
             miModifyImage->setVisible(false);
             fModifying = false;
             return MENU_CODE_UNSELECT_ITEM;
         }
     }
+
+    // Portrait split-screen is meaningful only for exactly two local humans.
+    int humanPlayers = 0;
+    for (int player = 0; player < 4; player++)
+        humanPlayers += game_values.playercontrol[player] == 1 ? 1 : 0;
+    if (humanPlayers != 2)
+        game_values.localTwoPlayerPortrait = false;
 
     return MENU_CODE_NONE;
 }
@@ -117,5 +132,15 @@ void MI_PlayerSelect::Draw()
 
     for (short iPlayer = 0; iPlayer < 4; iPlayer++) {
         spr->draw(m_pos.x + iPlayerPosition[iPlayer], m_pos.y + 16, {game_values.playercontrol[iPlayer] * 34 + 32, 206, 34, 32});
+    }
+
+    int humanPlayers = 0;
+    for (int player = 0; player < 4; player++)
+        humanPlayers += game_values.playercontrol[player] == 1 ? 1 : 0;
+    if (humanPlayers == 2) {
+        const char* mode = game_values.localTwoPlayerPortrait
+            ? "Portrait 2P: ON (Action to toggle)"
+            : "Portrait 2P: OFF (Action to toggle)";
+        rm->menu_font_small.drawCentered(m_pos.x + iWidth / 2, m_pos.y + 56, mode);
     }
 }

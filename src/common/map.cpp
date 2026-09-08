@@ -13,6 +13,7 @@
 #include "TilesetManager.h"
 #include "Version.h"
 #include "map/MapReader.h"
+#include "gfx/ThumbnailCache.h"
 
 #include "SDL_image.h"
 
@@ -1344,7 +1345,7 @@ void CMap::saveThumbnail(const std::string &sFile, bool fUseClassicPack)
     gfxSprite sThumbnail = createThumbnailSurface(fUseClassicPack);
 
     //Save the screenshot with the same name as the map file
-    IMG_SavePNG(sThumbnail.getSurface(), sFile.c_str());
+    thumbnail_cache::save(sThumbnail.getSurface(), sFile);
 }
 
 void CMap::calculatespawnareas(short iType, bool fUseTempBlocks, bool fIgnoreDeath)

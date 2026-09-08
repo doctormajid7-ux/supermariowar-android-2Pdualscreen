@@ -156,7 +156,40 @@ The build configuration contains some default compiler flags already, but since 
 
 ### Android
 
-The Android port uses a different build system, you can find more details [here](https://github.com/mmatyas/supermariowar-android).
+For the in-tree Android ARM64 port, build instructions and validation plan, see
+[docs/android-port.md](docs/android-port.md). Run `./android/build.sh` with
+`ANDROID_HOME` set to your SDK directory to build a debug APK.
+
+This Android port was originally created for my children. I spent many great hours
+playing Super Mario War with my brother when I was younger, and this port lets us
+enjoy the game together again.
+
+Many thanks to the original creator and to all Super Mario War contributors for
+making this game possible.
+
+#### Android port features
+
+- ARM64 Android build using SDL2, SDL2_image and SDL2_mixer.
+- Touch controls with multitouch pointer handling and safe-area support.
+- Optional portrait two-player mode with opposing control areas and dedicated
+  Player 2 controls.
+- Bluetooth controller support through SDL2.
+- Random bot skins and restore-default-controls actions.
+- Automatic map-thumbnail cache generation and recovery from missing thumbnails.
+- Android lifecycle handling, including renderer recovery after returning from another
+  application.
+
+The Android version keeps the original game logic and content while adding the Android
+activity, asset extraction, touch input layer, portrait split-screen rendering and
+Android-specific lifecycle handling.
+
+The older experimental Android port uses a separate build system, available
+[here](https://github.com/mmatyas/supermariowar-android).
+
+#### Android port credits
+
+The in-tree Android port is maintained by [@doctormajid7-ux](https://github.com/doctormajid7-ux).
+The original game is created and maintained by the Super Mario War contributors.
 
 ### Emscripten
 

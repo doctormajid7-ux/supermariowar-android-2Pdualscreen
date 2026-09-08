@@ -247,6 +247,11 @@ void SplashScreenState::update()
 
         menu_credits->setalpha((Uint8)alpha);
         menu_credits->draw(227, 200);
+#ifdef __ANDROID__
+        rm->menu_font_small.setAlpha((Uint8)alpha);
+        rm->menu_font_small.drawCentered(App::screenWidth / 2, 400,
+            "Android port by @doctormajid7-ux");
+#endif
     }
 
     if (state == 7) {

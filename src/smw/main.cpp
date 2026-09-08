@@ -64,6 +64,10 @@
 #include <emscripten.h>
 #endif
 
+#ifdef __ANDROID__
+#include <jni.h>
+#endif
+
 #ifdef _MSC_VER
 #if _MSC_VER >= 1400
     #include <stdio.h>
@@ -126,6 +130,24 @@ extern WorldList* worldlist;
 extern std::string RootDataDirectory;
 extern CGameValues game_values;
 extern CResourceManager* rm;
+
+#ifdef __ANDROID__
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_supermariowar_app_GameActivity_nativeIsTwoPlayerPortrait(JNIEnv*, jobject)
+{
+    int humanPlayers = 0;
+    for (int player = 0; player < 4; player++)
+        humanPlayers += game_values.playercontrol[player] == 1 ? 1 : 0;
+    return game_values.localTwoPlayerPortrait && humanPlayers == 2
+        ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_supermariowar_app_GameActivity_nativeIsGameplay(JNIEnv*, jobject)
+{
+    return game_values.appstate == AppState::Game ? JNI_TRUE : JNI_FALSE;
+}
+#endif
 
 //*************************************
 //  MAIN LOOP

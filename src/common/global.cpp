@@ -13,7 +13,9 @@
 
 // main game directory, read from command line argument
 #ifdef __ANDROID__
-std::string RootDataDirectory = GetHomeDirectory() + "data";
+// Android JNI is not ready during shared-library static initialization.
+// The Activity supplies the extracted data directory to SDL_main.
+std::string RootDataDirectory;
 #else
 std::string RootDataDirectory = GetRootDirectory() + "data";
 #endif

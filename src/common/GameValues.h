@@ -17,6 +17,9 @@ struct TourStop;
 
 void ifSoundOnPlay(sfxSound&);
 
+extern SDL_Keycode controlkeys[2][2][4][NUM_KEYS];
+void resetInputConfiguration(short playerID = -1);
+
 short defaultPowerupSetting(size_t presetIdx, size_t powerupIdx);
 
 enum class AppState: unsigned char {
@@ -119,6 +122,7 @@ public:
     short		pwingslimit;
     short		tanookilimit;
     short		playercontrol[4];
+    bool		localTwoPlayerPortrait;
     CPlayerInput playerInput;
     bool		playnextmusic;  //automatically advance to the next music track after one finishes
     short		outofboundstime;

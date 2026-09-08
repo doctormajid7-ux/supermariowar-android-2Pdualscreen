@@ -32,7 +32,7 @@ extern short joystickcount;
 
 //[Keyboard/Joystick][Game/Menu][NumPlayers][NumKeys]  left, right, jump, down, turbo, powerup, start, cancel
 SDL_Keycode controlkeys[2][2][4][NUM_KEYS] = { { { {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_RCTRL, SDLK_RSHIFT, SDLK_RETURN, SDLK_ESCAPE},
-            {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_e, SDLK_q, SDLK_UNKNOWN, SDLK_UNKNOWN},
+            {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_e, SDLK_q, SDLK_f, SDLK_r},
             {SDLK_g, SDLK_j, SDLK_y, SDLK_h, SDLK_u, SDLK_t, SDLK_UNKNOWN, SDLK_UNKNOWN},
             {SDLK_l, SDLK_QUOTE, SDLK_p, SDLK_SEMICOLON, SDLK_LEFTBRACKET, SDLK_o, SDLK_UNKNOWN, SDLK_UNKNOWN}
         },
@@ -59,6 +59,22 @@ SDL_Keycode controlkeys[2][2][4][NUM_KEYS] = { { { {SDLK_LEFT, SDLK_RIGHT, SDLK_
         }
     }
 };
+
+extern CGameValues game_values;
+
+void resetInputConfiguration(short playerID)
+{
+    const short first = playerID < 0 ? 0 : playerID;
+    const short last = playerID < 0 ? 4 : playerID + 1;
+    for (short player = first; player < last; player++) {
+        for (short device = 0; device < 2; device++) {
+            for (short menu = 0; menu < 2; menu++)
+                for (short key = 0; key < NUM_KEYS; key++)
+                    game_values.inputConfiguration[player][device].inputGameControls[menu].keys[key] =
+                        controlkeys[device][menu][player][key];
+        }
+    }
+}
 
 namespace {
 /*
@@ -127,7 +143,14 @@ void CGameValues::init()
 {
     //set standard game values
     playercontrol[0]  = 1;
+#ifdef __ANDROID__
+    // A fresh mobile install must not wait for a second keyboard player to ready up.
+    // ReadBinaryConfig still restores any explicitly saved player setup.
+    playercontrol[1]  = 2;
+#else
     playercontrol[1]  = 1;
+#endif
+    localTwoPlayerPortrait = false;
     showfps       = false;
     frameadvance    = false;
     autokill      = false;

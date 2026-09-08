@@ -1,16 +1,19 @@
 #include "gfxSDL.h"
 
 #include "path.h"
+#include "GameValues.h"
 
 #include "SDL_image.h"
 
 #include <chrono>
+#include <format>
 #include <iomanip>
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
 
 extern SDL_Surface* screen;
+extern CGameValues game_values;
 
 #define GFX_BPP 16
 #define GFX_SCREEN_W 640
@@ -47,6 +50,9 @@ void quitSdl()
 
 SDL_Window* createWindow(bool fullscreen)
 {
+#ifdef __ANDROID__
+    fullscreen = true;
+#endif
     Uint32 window_flags = SDL_WINDOW_RESIZABLE;
     if (fullscreen)
         window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -72,7 +78,7 @@ int findPreferredRendererIndex() {
     for (int i = 0; i < render_driver_count; i++) {
         SDL_RendererInfo renderer_info;
         SDL_GetRenderDriverInfo(i, &renderer_info);
-        if (strncmp(renderer_info.name, "opengles", strlen("opengles")) == 0)
+        if (strcmp(renderer_info.name, "opengles2") == 0)
             return i;
     }
 
@@ -132,12 +138,24 @@ SDL_Texture* createScreenTexture(SDL_Renderer* renderer)
 
 GraphicsSDL::~GraphicsSDL()
 {
+    shutdown();
+}
+
+void GraphicsSDL::shutdown()
+{
+    if (!sdl_window && !sdl_renderer && !sdl_screen_surface && !sdl_screen_texture)
+        return;
     SDL_DestroyTexture(sdl_screen_texture);
+    sdl_screen_texture = nullptr;
     SDL_FreeSurface(sdl_screen_surface);
+    sdl_screen_surface = nullptr;
     SDL_DestroyRenderer(sdl_renderer);
+    sdl_renderer = nullptr;
     SDL_DestroyWindow(sdl_window);
+    sdl_window = nullptr;
 
     quitSdl();
+    screen = nullptr;
 }
 
 bool GraphicsSDL::init(bool fullscreen)
@@ -158,6 +176,30 @@ bool GraphicsSDL::init(bool fullscreen)
     return true;
 }
 
+bool GraphicsSDL::recreateRenderer()
+{
+    if (!sdl_window)
+        return false;
+
+    SDL_DestroyTexture(sdl_screen_texture);
+    sdl_screen_texture = nullptr;
+    SDL_DestroyRenderer(sdl_renderer);
+    sdl_renderer = nullptr;
+
+    try {
+        sdl_renderer = createRenderer(sdl_window);
+        sdl_screen_texture = createScreenTexture(sdl_renderer);
+    } catch (const std::exception& ex) {
+        printf("[gfx][warning] Renderer recovery failed: %s\n", ex.what());
+        SDL_DestroyRenderer(sdl_renderer);
+        sdl_renderer = nullptr;
+        return false;
+    }
+
+    printf("[gfx] Renderer recovered after Android surface resume\n");
+    return true;
+}
+
 void GraphicsSDL::showErrorBox(const char* message) const
 {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message, sdl_window);
@@ -168,16 +210,48 @@ void GraphicsSDL::setTitle(const char* title) const
     SDL_SetWindowTitle(sdl_window, title);
 }
 
-void GraphicsSDL::flipScreen() const
+void GraphicsSDL::flipScreen()
 {
-    SDL_UpdateTexture(sdl_screen_texture, nullptr, sdl_screen_surface->pixels, sdl_screen_surface->pitch);
-    SDL_RenderClear(sdl_renderer);
-    SDL_RenderCopy(sdl_renderer, sdl_screen_texture, nullptr, nullptr);
+    if (!sdl_screen_texture || SDL_UpdateTexture(sdl_screen_texture, nullptr,
+            sdl_screen_surface->pixels, sdl_screen_surface->pitch) < 0) {
+        recreateRenderer();
+        if (!sdl_screen_texture || SDL_UpdateTexture(sdl_screen_texture, nullptr,
+                sdl_screen_surface->pixels, sdl_screen_surface->pitch) < 0)
+            return;
+    }
+    int humanPlayers = 0;
+    for (int player = 0; player < 4; player++)
+        humanPlayers += game_values.playercontrol[player] == 1 ? 1 : 0;
+    const bool splitPortrait = game_values.localTwoPlayerPortrait && humanPlayers == 2;
+    SDL_RenderSetLogicalSize(sdl_renderer, GFX_SCREEN_W,
+        splitPortrait ? GFX_SCREEN_H * 2 : GFX_SCREEN_H);
+    if (SDL_RenderClear(sdl_renderer) < 0) {
+        recreateRenderer();
+        return;
+    }
+    if (splitPortrait) {
+        SDL_Rect top{0, 0, GFX_SCREEN_W, GFX_SCREEN_H};
+        SDL_Rect bottom{0, GFX_SCREEN_H, GFX_SCREEN_W, GFX_SCREEN_H};
+        if (SDL_RenderCopyEx(sdl_renderer, sdl_screen_texture, nullptr, &top,
+                180.0, nullptr, SDL_FLIP_NONE) < 0 ||
+            SDL_RenderCopy(sdl_renderer, sdl_screen_texture, nullptr, &bottom) < 0) {
+            recreateRenderer();
+            return;
+        }
+    } else {
+        if (SDL_RenderCopy(sdl_renderer, sdl_screen_texture, nullptr, nullptr) < 0) {
+            recreateRenderer();
+            return;
+        }
+    }
     SDL_RenderPresent(sdl_renderer);
 }
 
 void GraphicsSDL::changeFullScreen(bool fullscreen) const
 {
+#ifdef __ANDROID__
+    fullscreen = true;
+#endif
     Uint32 flags = SDL_GetWindowFlags(sdl_window);
     if (fullscreen) {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;

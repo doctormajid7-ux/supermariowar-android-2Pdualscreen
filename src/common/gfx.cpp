@@ -197,6 +197,10 @@ void gfx_show_catched_error(const std::string& error)
         "reporting it on the link below, thanks!\n\n"
         "https://github.com/mmatyas/supermariowar/issues\n\n"
         "Sincerely,\nThe Developers";
+#ifdef __ANDROID__
+    message += "\n\nAndroid port by @doctormajid7-ux\n"
+               "https://github.com/doctormajid7-ux";
+#endif
     if (!error.empty()) {
         message += "\n\n\nThe error message:\n" + error;
     }
@@ -208,7 +212,9 @@ void gfx_take_screenshot() {
     gfx.takeScreenshot();
 }
 
-void gfx_close() {}
+void gfx_close() {
+    gfx.shutdown();
+}
 bool gfx_loadpalette(const std::filesystem::path& palette_path) {
     return gfx_palette.load(palette_path);
 }
