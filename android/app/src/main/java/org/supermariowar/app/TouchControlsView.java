@@ -10,8 +10,6 @@ import android.view.DisplayCutout;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import java.util.HashMap;
-import java.util.Map;
 import org.libsdl.app.SDLActivity;
 
 /** Transparent controller above SDL's surface. It consumes touches, never physical keys. */
@@ -21,9 +19,13 @@ final class TouchControlsView extends View {
     private static final int[] PAD_Y = {-56, 0, 56, 0};
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path arrow = new Path();
-    private final TouchInput input = new TouchInput((key, down) -> sendKey(0, key, down));
-    private final TouchInput input2 = new TouchInput((key, down) -> sendKey(1, key, down));
-    private final Map<Integer, Integer> pointerOwners = new HashMap<>();
+    private final TouchKeys keys = new TouchKeys(this::mapKey, (key, down) -> {
+        if (down) SDLActivity.onNativeKeyDown(key);
+        else SDLActivity.onNativeKeyUp(key);
+    });
+    private final TouchInput input = new TouchInput((key, down) -> keys.change(0, key, down));
+    private final TouchInput input2 = new TouchInput((key, down) -> keys.change(1, key, down));
+    private final TouchRouter router = new TouchRouter(input, input2);
     private TouchLayout layout, layout2;
     private boolean twoPlayerMode;
 
@@ -55,7 +57,7 @@ final class TouchControlsView extends View {
         });
     }
 
-    private void sendKey(int player, int key, boolean down) {
+    private int mapKey(int player, int key) {
         final int androidKey;
         if (player == 0) {
             switch (key) {
@@ -93,21 +95,25 @@ final class TouchControlsView extends View {
                 default: throw new IllegalArgumentException("Unknown touch key");
             }
         }
-        if (down) SDLActivity.onNativeKeyDown(androidKey);
-        else SDLActivity.onNativeKeyUp(androidKey);
+        return androidKey;
     }
 
     void releaseAll() {
-        input.releaseAll();
-        input2.releaseAll();
-        pointerOwners.clear();
+        router.releaseAll();
         invalidate();
     }
 
     void setInputActive(boolean active) {
-        input.setEnabled(active);
-        input2.setEnabled(active);
+        router.setEnabled(active);
         invalidate();
+    }
+
+    void refreshMenuState() {
+        boolean enabled = ((GameActivity) getContext()).allowsDpadUp();
+        if (router.allowsPadUp() != enabled) {
+            router.setAllowPadUp(enabled);
+            invalidate();
+        }
     }
 
     void setTwoPlayerMode(boolean enabled) {
@@ -132,6 +138,7 @@ final class TouchControlsView extends View {
             layout = new TouchLayout(left, top, right, bottom,
                     getResources().getDisplayMetrics().density, scale);
         }
+        router.configure(layout, layout2, scale);
         invalidate();
     }
 
@@ -151,6 +158,7 @@ final class TouchControlsView extends View {
 
     @Override public boolean onTouchEvent(MotionEvent event) {
         if (layout == null || !input.isEnabled()) return true;
+        refreshMenuState();
         final int action = event.getActionMasked();
         if (action == MotionEvent.ACTION_CANCEL) {
             releaseAll();
@@ -162,28 +170,19 @@ final class TouchControlsView extends View {
         final int changed = event.getActionIndex();
         if (action == MotionEvent.ACTION_DOWN) releaseAll();
         // Pointer IDs are stable; indices change as other fingers lift.
-        input.beginBatch(); input2.beginBatch();
+        keys.beginBatch();
+        router.beginBatch();
         for (int i = 0; i < event.getPointerCount(); i++) {
             int id = event.getPointerId(i);
-            if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN)
-                pointerOwners.putIfAbsent(id, twoPlayerMode && event.getY(i) < getHeight() / 2f ? 1 : 0);
-            int owner = pointerOwners.getOrDefault(id, 0);
-            TouchInput target = owner == 1 ? input2 : input;
-            TouchLayout targetLayout = owner == 1 ? layout2 : layout;
             if ((action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) && i == changed)
-                target.release(id);
-            else if (targetLayout != null) {
-                float x = event.getX(i), y = event.getY(i);
-                if (owner == 1) {
-                    x = targetLayout.left + targetLayout.right - x;
-                    y = targetLayout.top + targetLayout.bottom - event.getY(i);
-                }
-                target.move(id, targetLayout.hit(x, y, controlScale()));
-            }
-            if ((action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) && i == changed)
-                pointerOwners.remove(id);
+                router.up(id);
+            else if ((action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) && i == changed)
+                router.down(id, event.getX(i), event.getY(i));
+            else
+                router.move(id, event.getX(i), event.getY(i));
         }
-        input.endBatch(); input2.endBatch();
+        router.endBatch();
+        keys.endBatch();
         if (action == MotionEvent.ACTION_UP) {
             releaseAll();
             performClick();
@@ -199,6 +198,7 @@ final class TouchControlsView extends View {
 
     @Override protected void onDraw(Canvas canvas) {
         if (layout == null) return;
+        refreshMenuState();
         TouchLayout l = layout;
         drawControls(canvas, l, input);
         if (layout2 != null) {
@@ -264,6 +264,7 @@ final class TouchControlsView extends View {
         float u = l.unit, scale = controlScale();
         float cell = 54*u*scale, corner = 9*u*scale;
         for (int i = 0; i < 4; i++) {
+            if (PAD_KEYS[i] == TouchInput.UP && !router.allowsPadUp()) continue;
             float x = l.padX + PAD_X[i]*u*scale, y = l.padY + PAD_Y[i]*u*scale;
             boolean down = (source.held() & PAD_KEYS[i]) != 0;
             fill(down, Color.rgb(77, 160, 255));

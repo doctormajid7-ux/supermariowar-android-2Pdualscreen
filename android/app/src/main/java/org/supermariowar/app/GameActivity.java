@@ -27,12 +27,18 @@ public class GameActivity extends SDLActivity {
                         : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
                 if (touchControls != null) touchControls.setTwoPlayerMode(requested);
             }
+            if (touchControls != null) touchControls.refreshMenuState();
             modeHandler.postDelayed(this, 250);
         }
     };
 
     private native boolean nativeIsTwoPlayerPortrait();
     private native boolean nativeIsGameplay();
+    private native boolean nativeAllowsDpadUp();
+
+    boolean allowsDpadUp() {
+        return nativeAllowsDpadUp();
+    }
 
     boolean isGameplay() {
         return nativeIsGameplay();

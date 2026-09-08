@@ -8,5 +8,7 @@ java_cmd="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 "$javac_cmd" -d "$classes" \
     "$root/app/src/main/java/org/supermariowar/app/TouchInput.java" \
     "$root/app/src/main/java/org/supermariowar/app/TouchLayout.java" \
+    "$root/app/src/main/java/org/supermariowar/app/TouchRouter.java" \
+    "$root/app/src/main/java/org/supermariowar/app/TouchKeys.java" \
     "$root/tests/TouchControlsTest.java"
 "$java_cmd" -cp "$classes" org.supermariowar.app.TouchControlsTest

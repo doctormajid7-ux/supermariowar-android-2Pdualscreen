@@ -15,7 +15,8 @@ Many thanks to the original creator and to all Super Mario War contributors.
 ## Android features
 
 - ARM64 Android build using SDL2, SDL2_image and SDL2_mixer.
-- Multitouch controls with safe-area support.
+- Multitouch controls with safe-area support; 4/6/8-contact logic covered by host tests.
+- Menu-only D-pad Up; the dedicated Jump button handles jumping during matches.
 - Optional portrait two-player mode with opposing control areas.
 - Dedicated Player 2 touch controls.
 - Bluetooth controller support through SDL2.

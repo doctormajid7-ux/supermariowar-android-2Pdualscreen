@@ -123,6 +123,151 @@ public final class TouchControlsTest {
             check(Math.hypot(l.jump.x-l.action.x,l.jump.y-l.action.y) > l.jump.radius+l.action.radius, "Action and jump do not overlap");
             check(Math.hypot(l.item.x-l.action.x,l.item.y-l.action.y) > l.item.radius+l.action.radius, "Item and action do not overlap");
         }
+        testGameplayPad();
+        testTwoPlayerContacts();
+        testSharedKeys();
         System.out.println("Touch controls: " + checks + " checks passed");
+    }
+
+    private static void testGameplayPad() {
+        for (float scale : new float[] {1, 1.25f}) {
+            TouchLayout l = new TouchLayout(24, 12, 1056, 1180, 3, scale);
+            float offset = 56 * l.unit * scale;
+            check(l.hit(l.padX, l.padY-offset, scale, false) == 0, "Gameplay up target is inactive");
+            check(l.hit(l.padX+offset, l.padY-offset, scale, false) == TouchInput.RIGHT, "Upper diagonal keeps right without jump");
+            check(l.hit(l.padX-offset, l.padY-offset, scale, false) == TouchInput.LEFT, "Upper diagonal keeps left without jump");
+            check(l.hit(l.jump.x, l.jump.y, scale, false) == TouchInput.UP, "Dedicated jump stays active in game");
+            check(l.hit(l.padX, l.padY-offset, scale, true) == TouchInput.UP, "Menu up stays active");
+            check(l.hit(l.padX, l.padY+offset, scale, false) == TouchInput.DOWN, "Gameplay down stays active");
+        }
+    }
+
+    private static final class TwoPlayers {
+        final Recorder output = new Recorder();
+        final TouchKeys keys = new TouchKeys((player, key) ->
+                player == 0 || key == TouchInput.RANDOM || key == TouchInput.FAST ? key : key << 10, output);
+        final TouchInput first = new TouchInput((key, down) -> keys.change(0, key, down));
+        final TouchInput second = new TouchInput((key, down) -> keys.change(1, key, down));
+        final TouchRouter router = new TouchRouter(first, second);
+        final TouchLayout bottom = new TouchLayout(24, 1220, 1056, 2370, 3, 1.25f);
+        final TouchLayout top = new TouchLayout(24, 20, 1056, 1220, 3, 1.25f);
+        TwoPlayers() {
+            router.configure(bottom, top, 1.25f);
+            router.setAllowPadUp(false);
+        }
+        float[] point(int player, int control) {
+            TouchLayout l = player == 0 ? bottom : top;
+            float x, y;
+            switch (control) {
+                case 0: x=l.padX+56*l.unit*1.25f; y=l.padY; break;
+                case 1: x=l.jump.x; y=l.jump.y; break;
+                case 2: x=l.action.x; y=l.action.y; break;
+                case 3: x=l.item.x; y=l.item.y; break;
+                default: x=l.padX; y=l.padY-56*l.unit*1.25f; break;
+            }
+            return player == 0 ? new float[] {x,y} : new float[] {l.left+l.right-x,l.top+l.bottom-y};
+        }
+        void down(int id, int player, int control) {
+            float[] p=point(player, control);
+            router.down(id,p[0],p[1]);
+        }
+        void begin() { keys.beginBatch(); router.beginBatch(); }
+        void end() { router.endBatch(); keys.endBatch(); }
+    }
+
+    private static void testTwoPlayerContacts() {
+        int[] ids = {3, 27, 8, 22, 17, 2, 31, 14};
+        for (int count : new int[] {4,6,8}) {
+            TwoPlayers t = new TwoPlayers();
+            // Contacts alternate between players; pointer IDs are not array indices.
+            for (int i=0;i<count;i++) t.down(ids[i],i%2,i/2);
+            int expected = TouchInput.RIGHT | TouchInput.UP;
+            if (count>=6) expected |= TouchInput.ACTION | TouchInput.RANDOM;
+            if (count>=8) expected |= TouchInput.ITEM | TouchInput.FAST;
+            check(t.first.held()==expected && t.second.held()==expected, count+" contacts independently control both players");
+            int events=t.output.events.size();
+            for (int frame=0;frame<100;frame++) {
+                t.begin();
+                // Android can reorder indices; movement follows IDs in any order.
+                for (int i=count-1;i>=0;i--) {
+                    float[] p=t.point(i%2,i/2);
+                    t.router.move(ids[i],p[0],p[1]);
+                }
+                t.end();
+            }
+            check(t.output.events.size()==events, "Repeated multi-contact moves never repeat key-down");
+            // Lift P1's fingers first; P2 must keep all keys, including shared keys.
+            for (int i=0;i<count;i+=2) t.router.up(ids[i]);
+            check(t.first.held()==0 && t.second.held()==expected, "Lifting P1 retains all P2 controls");
+            if (count>=6) check((t.output.keys & TouchInput.RANDOM)!=0, "Shared random retained by P2");
+            if (count>=8) check((t.output.keys & TouchInput.FAST)!=0, "Shared fast retained by P2");
+            for (int i=count-1;i>=0;i-=2) t.router.up(ids[i]);
+            check(t.output.keys==0, "Arbitrary lift order releases all physical keys");
+
+            // All contacts sharing jump: only the last contact per player releases it.
+            for (int i=0;i<count;i++) t.down(ids[i],i%2,1);
+            for (int i=0;i<count-2;i++) t.router.up(ids[i]);
+            check(t.first.held()==TouchInput.UP && t.second.held()==TouchInput.UP, "Shared jump survives partial release");
+            t.router.releaseAll();
+            check(t.output.keys==0, "CANCEL clears every contact");
+            for (int i=0;i<count;i++) {
+                float[] p=t.point(i%2,1);
+                t.router.move(ids[i],p[0],p[1]);
+            }
+            check(t.output.keys==0, "Stale MOVE after cancellation cannot reactivate keys");
+
+            for (int i=0;i<count;i++) t.down(ids[i],i%2,i/2);
+            t.router.setEnabled(false);
+            check(t.output.keys==0, "Focus loss releases both players with many contacts");
+            t.down(19,0,1);
+            check(t.output.keys==0, "Focus loss ignores new contacts");
+            t.router.setEnabled(true);
+            t.down(19,1,1);
+            check(t.second.held()==TouchInput.UP, "Fresh contact works after focus returns");
+            t.router.configure(t.bottom,t.top,1.25f);
+            check(t.output.keys==0, "Layout change releases all contacts");
+        }
+
+        TwoPlayers t=new TwoPlayers();
+        for (int player=0;player<2;player++) {
+            t.down(player,player,4);
+            check(t.first.held()==0 && t.second.held()==0, "Up is inactive on both rotated gameplay pads");
+        }
+        t.router.setAllowPadUp(true);
+        t.down(7,0,4); t.down(23,1,4);
+        check(t.first.held()==TouchInput.UP && t.second.held()==TouchInput.UP, "Menus enable up for both players");
+        t.router.setAllowPadUp(false);
+        check(t.output.keys==0, "Entering gameplay releases menu up");
+        float[] p=t.point(0,4);
+        t.router.move(7,p[0],p[1]);
+        check(t.output.keys==0, "Held menu contact cannot trigger gameplay jump");
+        t.down(7,0,1);
+        float[] other=t.point(1,1);
+        t.router.move(7,other[0],other[1]);
+        check(t.output.keys==0, "Crossing halves cannot steal the other player's controls");
+        p=t.point(0,1);
+        t.router.move(7,p[0],p[1]);
+        check(t.first.held()==TouchInput.UP && t.second.held()==0, "Contact keeps its original owner on return");
+        t.router.releaseAll();
+    }
+
+    private static void testSharedKeys() {
+        Recorder output=new Recorder();
+        int[] mapping={TouchInput.ACTION};
+        TouchKeys keys=new TouchKeys((player,key)->mapping[0],output);
+        keys.change(0,TouchInput.CONFIRM,true);
+        output.expect("16+");
+        mapping[0]=TouchInput.ITEM;
+        keys.change(0,TouchInput.CONFIRM,false);
+        output.expect("16-"); // Menu/game mapping changes must release the original key.
+        keys.change(0,TouchInput.ACTION,true);
+        output.expect("32+");
+        keys.beginBatch();
+        keys.change(0,TouchInput.ACTION,false);
+        keys.change(1,TouchInput.ACTION,true);
+        keys.endBatch();
+        output.expect(); // Cross-player handoff in one event cannot retrigger a shared key.
+        keys.change(1,TouchInput.ACTION,false);
+        output.expect("32-");
     }
 }

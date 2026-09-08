@@ -49,6 +49,10 @@ final class TouchLayout {
     }
 
     int hit(float x, float y, float padScale) {
+        return hit(x, y, padScale, true);
+    }
+
+    int hit(float x, float y, float padScale, boolean allowPadUp) {
         if (y >= topY && y <= topY + topHeight) {
             if (x >= backX && x <= backX + topWidth) return TouchInput.BACK;
             if (x >= confirmX && x <= confirmX + topWidth) return TouchInput.CONFIRM;
@@ -63,7 +67,7 @@ final class TouchLayout {
         int keys = 0;
         if (dx < -dead) keys |= TouchInput.LEFT;
         if (dx > dead) keys |= TouchInput.RIGHT;
-        if (dy < -dead) keys |= TouchInput.UP;
+        if (allowPadUp && dy < -dead) keys |= TouchInput.UP;
         if (dy > dead) keys |= TouchInput.DOWN;
         return keys;
     }

@@ -147,6 +147,14 @@ Java_org_supermariowar_app_GameActivity_nativeIsGameplay(JNIEnv*, jobject)
 {
     return game_values.appstate == AppState::Game ? JNI_TRUE : JNI_FALSE;
 }
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_supermariowar_app_GameActivity_nativeAllowsDpadUp(JNIEnv*, jobject)
+{
+    return game_values.appstate != AppState::Game
+        || game_values.flags.pausegame || game_values.flags.exitinggame
+        ? JNI_TRUE : JNI_FALSE;
+}
 #endif
 
 //*************************************

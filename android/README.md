@@ -11,7 +11,7 @@ export JAVA_HOME=/chemin/vers/jdk-17
 APK : `app/build/outputs/apk/debug/app-debug.apk`.
 
 Cette version cible ARM64, Android 6 ou supérieur. Elle comprend le jeu local,
-les ressources et les contrôles tactiles pour le joueur 1 (clavier par défaut).
+les ressources et les contrôles tactiles pour un ou deux joueurs (clavier par défaut).
 Voir [les commandes et les tests tactiles](../docs/android-touch.md).
 Une nouvelle installation propose un humain face à un bot ; les options déjà sauvegardées
 restent prioritaires. Les essais sur téléphone restent à effectuer.
