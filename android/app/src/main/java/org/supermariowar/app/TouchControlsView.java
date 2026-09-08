@@ -162,8 +162,14 @@ final class TouchControlsView extends View {
     @Override public boolean onTouchEvent(MotionEvent event) {
         if (layout == null || !input.isEnabled()) return true;
         final int action = event.getActionMasked();
+        // Keep multi-finger slides and pinches owned by this overlay. Otherwise
+        // the SDL/Activity parent can intercept the gesture and send ACTION_CANCEL,
+        // releasing both players until a new touch sequence starts.
+        if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN)
+            if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(true);
         if (action == MotionEvent.ACTION_CANCEL) {
             releaseAll();
+            if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(false);
             return true;
         }
         if (action != MotionEvent.ACTION_DOWN && action != MotionEvent.ACTION_POINTER_DOWN
@@ -187,6 +193,7 @@ final class TouchControlsView extends View {
         keys.endBatch();
         if (action == MotionEvent.ACTION_UP) {
             releaseAll();
+            if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(false);
             performClick();
         }
         invalidate();

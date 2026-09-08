@@ -81,6 +81,9 @@ indépendant des raccourcis clavier ne sont pas implémentés dans cette version
   Le haut de la croix peut être désactivé sans désactiver le bouton Saut.
 - `TouchRouter` garde chaque contact affecté au joueur de départ, applique la rotation
   de la moitié supérieure et ignore les mouvements périmés après une annulation.
+- L’overlay demande aussi à son parent de ne pas intercepter les gestes dès le premier
+  doigt ; les glissements à plusieurs doigts et les pincements ne doivent plus être
+  transformés en `ACTION_CANCEL` qui relâcherait les deux joueurs.
 - `TouchKeys` fusionne les touches clavier partagées entre les joueurs. Relâcher
   Action, Objet ou une validation ne coupe plus une touche encore détenue ailleurs.
   La touche physique à relâcher est celle choisie à l'appui, même après un changement
