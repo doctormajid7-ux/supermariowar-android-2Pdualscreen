@@ -28,6 +28,11 @@ public class GameActivity extends SDLActivity {
             boolean requested = nativeIsTwoPlayerPortrait();
             gameplay = nativeIsGameplay();
             dpadUpAllowed = nativeAllowsDpadUp();
+            // During a match player-control values can briefly be rebuilt while
+            // the native state changes. Do not let that transient false value
+            // rotate the Activity: orientation changes drop window focus and can
+            // stop both players' touch input for roughly a second.
+            if (portraitMode && gameplay && !requested) requested = true;
             if (requested != portraitMode) {
                 portraitMode = requested;
                 setRequestedOrientation(requested ? ActivityInfo.SCREEN_ORIENTATION_PORTRAIT

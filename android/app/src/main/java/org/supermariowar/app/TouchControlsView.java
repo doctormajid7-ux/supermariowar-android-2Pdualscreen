@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.DisplayCutout;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -30,6 +32,15 @@ final class TouchControlsView extends View {
     private boolean twoPlayerMode;
     private boolean gameplay;
     private boolean dpadUpAllowed = true;
+    private final Handler inputHeartbeat = new Handler(Looper.getMainLooper());
+    private boolean inputActive;
+    private final Runnable reassertHeldKeys = new Runnable() {
+        @Override public void run() {
+            if (!inputActive || !isAttachedToWindow()) return;
+            keys.resendHeld();
+            inputHeartbeat.postDelayed(this, 100);
+        }
+    };
 
     private float controlScale() {
         return getHeight() > getWidth() ? 1.25f : 1.0f;
@@ -106,7 +117,10 @@ final class TouchControlsView extends View {
     }
 
     void setInputActive(boolean active) {
+        inputActive = active;
         router.setEnabled(active);
+        inputHeartbeat.removeCallbacks(reassertHeldKeys);
+        if (active) inputHeartbeat.post(reassertHeldKeys);
         invalidate();
     }
 
@@ -155,6 +169,8 @@ final class TouchControlsView extends View {
     }
 
     @Override protected void onDetachedFromWindow() {
+        inputActive = false;
+        inputHeartbeat.removeCallbacks(reassertHeldKeys);
         releaseAll();
         super.onDetachedFromWindow();
     }

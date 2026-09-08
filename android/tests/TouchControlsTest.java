@@ -15,8 +15,9 @@ public final class TouchControlsTest {
     private static final class Recorder implements TouchInput.Sink {
         final List<String> events = new ArrayList<>();
         int keys;
+        boolean allowRepeat;
         public void keyChanged(int key, boolean down) {
-            check(((keys & key) != 0) != down, "Unbalanced or duplicate key event");
+            if (!allowRepeat) check(((keys & key) != 0) != down, "Unbalanced or duplicate key event");
             keys = down ? keys | key : keys & ~key;
             events.add(key + (down ? "+" : "-"));
         }
@@ -268,6 +269,16 @@ public final class TouchControlsTest {
         keys.endBatch();
         output.expect(); // Cross-player handoff in one event cannot retrigger a shared key.
         keys.change(1,TouchInput.ACTION,false);
+        output.expect("32-");
+
+        // A native ResetKeys can clear SDL's state while fingers remain down.
+        keys.change(0, TouchInput.ACTION, true);
+        output.expect("32+");
+        output.allowRepeat = true;
+        keys.resendHeld();
+        output.expect("32+");
+        output.allowRepeat = false;
+        keys.change(0, TouchInput.ACTION, false);
         output.expect("32-");
     }
 }
