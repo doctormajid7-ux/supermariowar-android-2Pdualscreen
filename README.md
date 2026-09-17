@@ -10,6 +10,13 @@ I originally created this Android port for my children. I spent many great hours
 playing Super Mario War with my brother when I was younger, and this port lets us
 enjoy the game together again.
 
+Maybe I'm old-school, but I still prefer playing on the SAME screen, sitting next to each other. That's how we had fun in the 80s/90s - shoulder to shoulder, trash-talking, stealing glances at the other side of the screen, elbowing each other when things got tense.
+
+Playing online, each on your own console/PC/phone, is practical, sure. But it doesn't have the same charm, the same fun. There's no real contact, no shared laughter, no tension in the room.
+
+That's why I wanted this portrait dual-screen mode: two players, one phone, close together, like before.
+
+
 **How to activate splitscreen (important):**
 
 1. Install the APK, open the game, press OK / Pause to skip the splash screen
