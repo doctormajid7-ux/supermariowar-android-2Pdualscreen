@@ -64,6 +64,15 @@ For the original game, Windows and Linux versions, general compilation instructi
 game information and the complete upstream documentation, visit the
 [official Super Mario War repository](https://github.com/mmatyas/supermariowar).
 
+<img width="1216" height="2688" alt="Screenshot_20260917_112758" src="https://github.com/user-attachments/assets/bea350ea-846c-4b6b-8615-e9eec253adac" />
+<img width="1216" height="2688" alt="Screenshot_20260917_112146" src="https://github.com/user-attachments/assets/0f42b604-6e62-48f6-96fa-fbb1c12370ee" />
+<img width="1216" height="2688" alt="Screenshot_20260917_112152" src="https://github.com/user-attachments/assets/42a33301-6ed4-48be-8266-6bb85fdcb311" />
+<img width="1216" height="2688" alt="Screenshot_20260917_112204" src="https://github.com/user-attachments/assets/ff256e79-d5ce-4d75-8a22-064e5b4265fc" />
+<img width="2688" height="1216" alt="Screenshot_20260917_112216" src="https://github.com/user-attachments/assets/4379b657-a4ee-482c-8bee-26fbacb3c5cf" />
+<img width="1216" height="2688" alt="Screenshot_20260917_112657" src="https://github.com/user-attachments/assets/5aa0f2d6-eb31-4fff-a0b1-a1aa86ef280f" />
+<img width="1216" height="2688" alt="Screenshot_20260917_112737" src="https://github.com/user-attachments/assets/82fe1588-df60-4bc0-95e1-0952c3886c72" />
+
+
 ## Credits
 
 - Original game: the Super Mario War contributors.
