@@ -68,7 +68,7 @@ game information and the complete upstream documentation, visit the
 <img width="400" height="887" alt="Screenshot_20260917_112146" src="https://github.com/user-attachments/assets/0f42b604-6e62-48f6-96fa-fbb1c12370ee" />
 <img width="400" height="887" alt="Screenshot_20260917_112152" src="https://github.com/user-attachments/assets/42a33301-6ed4-48be-8266-6bb85fdcb311" />
 <img width="400" height="887" alt="Screenshot_20260917_112204" src="https://github.com/user-attachments/assets/ff256e79-d5ce-4d75-8a22-064e5b4265fc" />
-<img width="400" height="887" alt="Screenshot_20260917_112216" src="https://github.com/user-attachments/assets/4379b657-a4ee-482c-8bee-26fbacb3c5cf" />
+<img width="887" height="400" alt="Screenshot_20260917_112216" src="https://github.com/user-attachments/assets/4379b657-a4ee-482c-8bee-26fbacb3c5cf" />
 <img width="400" height="887" alt="Screenshot_20260917_112657" src="https://github.com/user-attachments/assets/5aa0f2d6-eb31-4fff-a0b1-a1aa86ef280f" />
 <img width="400" height="887" alt="Screenshot_20260917_112737" src="https://github.com/user-attachments/assets/82fe1588-df60-4bc0-95e1-0952c3886c72" />
 
